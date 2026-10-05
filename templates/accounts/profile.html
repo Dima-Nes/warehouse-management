@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-person-circle me-2 text-primary"></i>Мой профиль
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Имя пользователя</dt>
+                        <dd class="col-sm-8 fw-semibold">{{ user.username }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Полное имя</dt>
+                        <dd class="col-sm-8">{{ user.get_full_name|default:"—" }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Email</dt>
+                        <dd class="col-sm-8">{{ user.email|default:"—" }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Роль</dt>
+                        <dd class="col-sm-8">
+                            {% if user.is_admin %}
+                                <span class="badge bg-danger">{{ user.get_role_display }}</span>
+                            {% elif user.is_manager %}
+                                <span class="badge bg-primary">{{ user.get_role_display }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ user.get_role_display }}</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Дата регистрации</dt>
+                        <dd class="col-sm-8">{{ user.date_joined|date:"d.m.Y" }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Последний вход</dt>
+                        <dd class="col-sm-8">{{ user.last_login|date:"d.m.Y H:i"|default:"—" }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

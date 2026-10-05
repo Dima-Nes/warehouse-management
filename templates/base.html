@@ -64,25 +64,41 @@
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle"></i>
                         {{ user.get_full_name|default:user.username }}
-                        <span class="badge bg-secondary">{{ user.get_role_display }}</span>
+                        {% if user.is_admin %}
+                            <span class="badge bg-danger ms-1">{{ user.get_role_display }}</span>
+                        {% elif user.is_manager %}
+                            <span class="badge bg-primary ms-1">{{ user.get_role_display }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary ms-1">{{ user.get_role_display }}</span>
+                        {% endif %}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                <i class="bi bi-person me-1"></i> Мой профиль
+                            </a>
+                        </li>
                         {% if user.is_admin %}
                         <li>
                             <a class="dropdown-item" href="/admin/">
-                                <i class="bi bi-gear"></i> Панель администратора
+                                <i class="bi bi-gear me-1"></i> Панель администратора
                             </a>
                         </li>
-                        <li><hr class="dropdown-divider"></li>
                         {% endif %}
+                        <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
-                                <i class="bi bi-box-arrow-right"></i> Выйти
-                            </a>
+                            <!-- Выход через POST для защиты от CSRF -->
+                            <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="bi bi-box-arrow-right me-1"></i> Выйти
+                                </button>
+                            </form>
                         </li>
                     </ul>
                 </li>
             </ul>
+
         </div>
     </div>
 </nav>
