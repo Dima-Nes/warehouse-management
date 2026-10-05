@@ -35,7 +35,7 @@
             <form method="post" novalidate>
                 {% csrf_token %}
 
-                {{# Имя и фамилия — в одну строку #}}
+                {# Имя и фамилия — в одну строку #}
                 <div class="row g-3 mb-3">
                     <div class="col-sm-6">
                         <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold">
@@ -61,7 +61,7 @@
                     </div>
                 </div>
 
-                {{# Email #}}
+                {# Email #}
                 <div class="mb-3">
                     <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">
                         <i class="bi bi-envelope me-1"></i>{{ form.email.label }}
@@ -74,7 +74,7 @@
                     {% endif %}
                 </div>
 
-                {{# Имя пользователя #}}
+                {# Имя пользователя #}
                 <div class="mb-3">
                     <label for="{{ form.username.id_for_label }}" class="form-label fw-semibold">
                         <i class="bi bi-person me-1"></i>{{ form.username.label }}
@@ -87,7 +87,7 @@
                     {% endif %}
                 </div>
 
-                {{# Роль #}}
+                {# Роль #}
                 <div class="mb-3">
                     <label for="{{ form.role.id_for_label }}" class="form-label fw-semibold">
                         <i class="bi bi-shield-check me-1"></i>{{ form.role.label }}
@@ -98,7 +98,7 @@
                     </div>
                 </div>
 
-                {{# Пароли #}}
+                {# Пароли #}
                 <div class="row g-3 mb-4">
                     <div class="col-sm-6">
                         <label for="{{ form.password1.id_for_label }}" class="form-label fw-semibold">
