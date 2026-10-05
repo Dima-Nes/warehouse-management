@@ -92,75 +92,61 @@ main.container-fluid {
 
 /* ---------- Страницы аутентификации ---------- */
 
-/* Анимированный градиент на фоне */
-@keyframes gradientAnimation {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
 .auth-wrapper {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
-    /* Легкий, современный светлый градиент */
-    background: linear-gradient(-45deg, #e2e8f0, #f8fafc, #e0e7ff, #f1f5f9);
-    background-size: 400% 400%;
-    animation: gradientAnimation 15s ease infinite;
-}
-
-/* Плавное появление карточки снизу-вверх */
-@keyframes fadeUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    padding: 1.5rem;
+    background-color: #eef2f6;
 }
 
 .auth-card {
     width: 100%;
-    max-width: 460px; /* Чуть шире, чтобы не была вытянутой */
+    max-width: 380px; /* Аккуратное, компактное окно */
     border: none;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
-    animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s ease;
 }
 
 .auth-card .card-body {
-    padding: 2.5rem !important; /* Более сбалансированные внутренние отступы */
+    padding: 2rem !important; /* Компактные отступы */
+}
+
+/* Строго круглый контейнер логотипа */
+.auth-logo-circle {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    min-height: 64px;
+    border-radius: 50% !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(13, 110, 253, 0.08);
+    margin-bottom: 0.75rem;
 }
 
 .auth-card .form-control, .auth-card .form-select {
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
     border: 1px solid #cbd5e1;
-    transition: all 0.2s;
-    background-color: #f8fafc;
+    font-size: 0.95rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .auth-card .form-control:focus, .auth-card .form-select:focus {
-    background-color: #fff;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
 }
 
 .auth-card .btn-primary, .auth-card .btn-success {
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
-    transition: transform 0.15s, box-shadow 0.15s;
-}
-
-.auth-card .btn-primary:hover, .auth-card .btn-success:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    padding: 0.65rem 1rem;
+    font-weight: 600;
+    font-size: 0.95rem;
 }
 
 /* ---------- Футер ---------- */
