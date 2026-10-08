@@ -6,6 +6,7 @@ inventory/admin.py
 
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from .models import Category, Product
 
 
@@ -64,10 +65,10 @@ class ProductAdmin(admin.ModelAdmin):
     def stock_status_badge(self, obj):
         """Индикатор состояния остатка в списке."""
         if obj.is_out_of_stock:
-            return format_html('<span style="color:#dc2626; font-weight:bold;">● Нет на складе</span>')
+            return mark_safe('<span style="color:#dc2626; font-weight:bold;">● Нет на складе</span>')
         elif obj.is_low_stock:
-            return format_html('<span style="color:#d97706; font-weight:bold;">▲ Дефицит</span>')
-        return format_html('<span style="color:#16a34a; font-weight:bold;">✓ В наличии</span>')
+            return mark_safe('<span style="color:#d97706; font-weight:bold;">▲ Дефицит</span>')
+        return mark_safe('<span style="color:#16a34a; font-weight:bold;">✓ В наличии</span>')
     stock_status_badge.short_description = 'Статус'
 
     def total_cost_display(self, obj):
