@@ -3,6 +3,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+# Кастомизация заголовков панели администратора
+admin.site.site_header = 'Система управления складом'
+admin.site.site_title = 'Панель администратора'
+admin.site.index_title = 'Управление базой данных склада'
+
 urlpatterns = [
     # Панель администратора Django
     path('admin/', admin.site.urls),
