@@ -2,8 +2,128 @@
 {% block title %}Дашборд{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Дашборд</h2>
-    <!-- Контент будет добавлен позже -->
+<div class="container-fluid px-0">
+
+    {# Заголовок страницы #}
+    <div class="page-header d-flex align-items-center justify-content-between">
+        <div>
+            <h2><i class="bi bi-speedometer2 text-primary me-2"></i>Дашборд</h2>
+            <p class="text-muted mb-0">Сводная информация о состоянии склада</p>
+        </div>
+        <div class="text-muted small">
+            <i class="bi bi-clock me-1"></i>{{ today|date:"d.m.Y" }}
+        </div>
+    </div>
+
+    {# KPI-карточки #}
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="kpi-card" style="--kpi-color: #2563eb;">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="kpi-label mb-2">Позиций в каталоге</div>
+                        <div class="kpi-value">{{ total_products }}</div>
+                    </div>
+                    <div class="kpi-icon" style="background: rgba(37,99,235,0.1); color: #2563eb;">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="kpi-card" style="--kpi-color: #dc2626;">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="kpi-label mb-2">Дефицит (ниже порога)</div>
+                        <div class="kpi-value">{{ low_stock_count }}</div>
+                    </div>
+                    <div class="kpi-icon" style="background: rgba(220,38,38,0.1); color: #dc2626;">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="kpi-card" style="--kpi-color: #16a34a;">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="kpi-label mb-2">Поставщиков</div>
+                        <div class="kpi-value">{{ total_suppliers }}</div>
+                    </div>
+                    <div class="kpi-icon" style="background: rgba(22,163,74,0.1); color: #16a34a;">
+                        <i class="bi bi-truck"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="kpi-card" style="--kpi-color: #d97706;">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="kpi-label mb-2">Открытых заказов</div>
+                        <div class="kpi-value">{{ open_orders }}</div>
+                    </div>
+                    <div class="kpi-icon" style="background: rgba(217,119,6,0.1); color: #d97706;">
+                        <i class="bi bi-clipboard-check"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {# Нижняя секция: быстрые ссылки #}
+    <div class="row g-3">
+        <div class="col-12 col-lg-6">
+            <div class="section-card p-3">
+                <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-lightning-charge text-warning"></i>Быстрые действия
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'inventory:product_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-box-seam me-1"></i>Каталог товаров
+                    </a>
+                    {% if user.is_admin or user.is_manager %}
+                    <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-truck me-1"></i>Поставщики
+                    </a>
+                    {% endif %}
+                    {% if user.is_admin %}
+                    <a href="/admin/" class="btn btn-outline-dark btn-sm">
+                        <i class="bi bi-gear me-1"></i>Администрирование
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="section-card p-3">
+                <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-person-circle text-primary"></i>Ваши данные
+                </h6>
+                <div class="d-flex align-items-center gap-3">
+                    <div>
+                        <div class="fw-semibold">{{ user.get_full_name|default:user.username }}</div>
+                        <div class="text-muted small">{{ user.email }}</div>
+                    </div>
+                    <div class="ms-auto">
+                        {% if user.is_admin %}
+                            <span class="badge bg-danger">{{ user.get_role_display }}</span>
+                        {% elif user.is_manager %}
+                            <span class="badge bg-primary">{{ user.get_role_display }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ user.get_role_display }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}

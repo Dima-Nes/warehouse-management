@@ -1,97 +1,237 @@
 /* =====================================================================
-   Система управления складом — основные стили
+   Система управления складом — Основные стили
    Студент: Нестерук Д.С., ПО-2409
    ===================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* ---------- Переменные ---------- */
+:root {
+    --color-primary:   #2563eb;
+    --color-success:   #16a34a;
+    --color-danger:    #dc2626;
+    --color-warning:   #d97706;
+    --color-text:      #1e293b;
+    --color-muted:     #64748b;
+    --color-border:    #e2e8f0;
+    --color-bg:        #f8fafc;
+    --color-card:      #ffffff;
+    --navbar-height:   56px;
+    --radius-sm:       8px;
+    --radius-md:       12px;
+    --radius-lg:       16px;
+    --shadow-sm:       0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:       0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+    --shadow-lg:       0 12px 32px rgba(0,0,0,0.08);
+}
 
-/* ---------- Общее ---------- */
+/* ---------- Типографика и базовое ---------- */
 body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.9rem;
+    color: var(--color-text);
+    background-color: var(--color-bg);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: #f8f9fc;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    color: #2b3445;
-}
-
-main.container-fluid {
-    flex: 1;
 }
 
 /* ---------- Навигация ---------- */
 .navbar {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    height: var(--navbar-height);
+    box-shadow: 0 1px 8px rgba(0,0,0,0.15);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
 .navbar-brand {
-    font-size: 1.25rem;
-    letter-spacing: 0.3px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
 }
 
-/* ---------- Карточки дашборда ---------- */
-.stat-card {
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+.nav-link-icon {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    padding: 6px 12px !important;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s ease;
 }
 
-.stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+.nav-link-icon:hover {
+    background: rgba(255,255,255,0.1) !important;
 }
 
-.stat-card .card-body {
-    padding: 1.5rem;
+.nav-link-icon.active {
+    background: rgba(255,255,255,0.15) !important;
+    font-weight: 600;
 }
 
-.stat-card .stat-icon {
-    font-size: 2.5rem;
-    opacity: 0.85;
+/* ---------- Flash-сообщения ---------- */
+.messages-container {
+    position: sticky;
+    top: var(--navbar-height);
+    z-index: 999;
 }
 
-.stat-card .stat-value {
-    font-size: 2rem;
+.messages-container .alert {
+    padding: 0.6rem 0;
+    font-size: 0.875rem;
+    backdrop-filter: blur(4px);
+}
+
+/* ---------- Основной контент ---------- */
+.main-content {
+    flex: 1;
+    padding: 1.75rem 1.5rem;
+}
+
+/* ---------- Футер ---------- */
+.site-footer {
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-card);
+    font-size: 0.8rem;
+}
+
+/* ---------- Карточки ---------- */
+.card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    background: var(--color-card);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* KPI-карточки на дашборде */
+.kpi-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    background: var(--color-card);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--kpi-color, var(--color-primary));
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.kpi-card .kpi-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.kpi-card .kpi-value {
+    font-size: 1.75rem;
     font-weight: 700;
     line-height: 1;
-    color: #1e293b;
+    color: var(--color-text);
 }
 
-.stat-card .stat-label {
-    font-size: 0.85rem;
+.kpi-card .kpi-label {
+    font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    opacity: 0.75;
     font-weight: 600;
+    color: var(--color-muted);
 }
 
 /* ---------- Таблицы ---------- */
-.table-warehouse th {
-    background-color: #f1f5f9;
-    color: #475569;
-    font-weight: 600;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 2px solid #e2e8f0;
+.table {
+    font-size: 0.875rem;
 }
 
-.table-warehouse td {
+.table th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+    color: var(--color-muted);
+    border-bottom: 2px solid var(--color-border);
+    white-space: nowrap;
+}
+
+.table td {
     vertical-align: middle;
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+.table tbody tr:hover td {
+    background-color: rgba(37, 99, 235, 0.03);
 }
 
 /* ---------- Бейджи статусов ---------- */
 .badge {
     font-weight: 500;
-    padding: 0.4em 0.65em;
+    font-size: 0.72rem;
+    padding: 0.3em 0.65em;
+    border-radius: 4px;
 }
-.badge-in-stock   { background-color: #10b981; color: white;}
-.badge-low-stock  { background-color: #f59e0b; color: white;}
-.badge-out-stock  { background-color: #ef4444; color: white;}
+
+.badge-in-stock  { background: #dcfce7; color: #16a34a; }
+.badge-low-stock { background: #fef3c7; color: #d97706; }
+.badge-out-stock { background: #fee2e2; color: #dc2626; }
+
+/* ---------- Кнопки ---------- */
+.btn {
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+}
+
+.btn-sm {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.75rem;
+}
+
+/* ---------- Формы ---------- */
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text);
+    margin-bottom: 0.35rem;
+}
+
+.form-control, .form-select {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    font-size: 0.875rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
 
 /* ---------- Страницы аутентификации ---------- */
-
 .auth-wrapper {
     min-height: 100vh;
     display: flex;
@@ -103,16 +243,15 @@ main.container-fluid {
 
 .auth-card {
     width: 100%;
-    max-width: 380px; /* Аккуратное, компактное окно */
-    border: none;
-    border-radius: 16px;
-    background: #ffffff;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
-    transition: box-shadow 0.2s ease;
+    max-width: 380px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-card);
+    box-shadow: var(--shadow-lg);
 }
 
 .auth-card .card-body {
-    padding: 2rem !important; /* Компактные отступы */
+    padding: 2rem !important;
 }
 
 /* Строго круглый контейнер логотипа */
@@ -125,33 +264,39 @@ main.container-fluid {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(13, 110, 253, 0.08);
+    background-color: rgba(37, 99, 235, 0.08);
     margin-bottom: 0.75rem;
 }
 
 .auth-card .form-control, .auth-card .form-select {
-    border-radius: 8px;
     padding: 0.6rem 0.85rem;
-    border: 1px solid #cbd5e1;
-    font-size: 0.95rem;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    font-size: 0.9rem;
 }
 
-.auth-card .form-control:focus, .auth-card .form-select:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
-}
-
-.auth-card .btn-primary, .auth-card .btn-success {
-    border-radius: 8px;
+.auth-card .btn {
     padding: 0.65rem 1rem;
     font-weight: 600;
-    font-size: 0.95rem;
 }
 
-/* ---------- Футер ---------- */
-footer {
-    font-size: 0.85rem;
-    color: #64748b;
-    background-color: #fff !important;
+/* ---------- Утилиты ---------- */
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-header h1, .page-header h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 0.25rem;
+}
+
+.page-header .text-muted {
+    font-size: 0.875rem;
+}
+
+.section-card {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-card);
+    box-shadow: var(--shadow-sm);
 }

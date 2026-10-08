@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Внутренняя ошибка сервера — Система управления складом</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body style="background: #f8fafc;">
+<div class="d-flex align-items-center justify-content-center min-vh-100">
+    <div class="text-center px-3">
+        <div class="mb-4" style="font-size: 5rem; color: #fee2e2; font-weight: 800; line-height: 1;">500</div>
+        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+             style="width: 80px; height: 80px; background: rgba(220,38,38,0.08);">
+            <i class="bi bi-exclamation-triangle fs-1 text-danger"></i>
+        </div>
+        <h1 class="h4 fw-bold mb-2">Внутренняя ошибка сервера</h1>
+        <p class="text-muted mb-4">
+            Произошла непредвиденная ошибка при обработке вашего запроса.<br>
+            Администратор системы уже оповещён.
+        </p>
+        <div class="d-flex gap-2 justify-content-center">
+            <a href="/" class="btn btn-primary">
+                <i class="bi bi-house me-2"></i>На главную
+            </a>
+            <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Назад
+            </a>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
