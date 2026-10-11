@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Строка формсета, помеченная на удаление */
+    .formset-row.marked-for-delete {
+        opacity: 0.4;
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    {# ====== Хлебные крошки ====== #}
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'suppliers:order_list' %}" class="text-decoration-none">
+                    <i class="bi bi-clipboard-check me-1"></i>Заказы
+                </a>
+            </li>
+            <li class="breadcrumb-item active">{{ page_title }}</li>
+        </ol>
+    </nav>
+
+    <form method="post" id="orderForm" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-4">
+
+            {# ====== Левая колонка: шапка заказа ====== #}
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="bi bi-file-text me-2 text-primary"></i>Шапка заказа
+                        </h5>
+                    </div>
+                    <div class="card-body">
+
+                        {# Номер документа #}
+                        <div class="mb-3">
+                            <label for="{{ form.number.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.number.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.number }}
+                            {% if form.number.errors %}
+                            <div class="invalid-feedback d-block">{{ form.number.errors|join:", " }}</div>
+                            {% endif %}
+                            <div class="form-text">Например: ЗК-2026-001</div>
+                        </div>
+
+                        {# Поставщик #}
+                        <div class="mb-3">
+                            <label for="{{ form.supplier.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.supplier.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.supplier }}
+                            {% if form.supplier.errors %}
+                            <div class="invalid-feedback d-block">{{ form.supplier.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        {# Плановая дата #}
+                        <div class="mb-3">
+                            <label for="{{ form.planned_date.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.planned_date.label }}
+                            </label>
+                            {{ form.planned_date }}
+                            {% if form.planned_date.errors %}
+                            <div class="invalid-feedback d-block">{{ form.planned_date.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        {# Комментарий #}
+                        <div class="mb-0">
+                            <label for="{{ form.comment.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.comment.label }}
+                            </label>
+                            {{ form.comment }}
+                            {% if form.comment.errors %}
+                            <div class="invalid-feedback d-block">{{ form.comment.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            {# ====== Правая колонка: позиции заказа ====== #}
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="bi bi-list-ul me-2 text-primary"></i>Позиции заказа
+                        </h5>
+                        <button type="button" id="addRowBtn" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-lg me-1"></i>Добавить позицию
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+
+                        {# Скрытые управляющие поля формсета #}
+                        {{ formset.management_form }}
+
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0" id="formsetTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3" style="min-width:220px">Товар</th>
+                                        <th style="width:110px">Кол-во</th>
+                                        <th style="width:140px">Цена, руб.</th>
+                                        <th style="width:120px" class="text-end">Сумма</th>
+                                        <th style="width:50px"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="formsetBody">
+                                    {% for item_form in formset %}
+                                    <tr class="formset-row" data-index="{{ forloop.counter0 }}">
+                                        <td class="ps-3">
+                                            {{ item_form.product }}
+                                            {{ item_form.id }}
+                                            {% if item_form.instance.pk %}
+                                                {{ item_form.DELETE }}
+                                            {% endif %}
+                                            {% if item_form.product.errors %}
+                                            <div class="invalid-feedback d-block small">{{ item_form.product.errors|join:", " }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ item_form.quantity }}
+                                            {% if item_form.quantity.errors %}
+                                            <div class="invalid-feedback d-block small">{{ item_form.quantity.errors|join:", " }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ item_form.purchase_price }}
+                                            {% if item_form.purchase_price.errors %}
+                                            <div class="invalid-feedback d-block small">{{ item_form.purchase_price.errors|join:", " }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end fw-semibold line-total">—</td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-outline-danger delete-row-btn"
+                                                    title="Удалить строку">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-light fw-bold">
+                                        <td colspan="3" class="ps-3 text-end">Итого:</td>
+                                        <td class="text-end" id="orderTotal">0.00 руб.</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        {% if formset.non_form_errors %}
+                        <div class="alert alert-danger m-3 mb-0">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            {{ formset.non_form_errors|join:", " }}
+                        </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {# ====== Кнопки действий ====== #}
+        <div class="d-flex gap-2 justify-content-end mt-4">
+            <a href="{% if order %}{% url 'suppliers:order_detail' order.pk %}{% else %}{% url 'suppliers:order_list' %}{% endif %}"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-1"></i>Отмена
+            </a>
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-check-lg me-1"></i>
+                {% if order %}Сохранить изменения{% else %}Создать заказ{% endif %}
+            </button>
+        </div>
+
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    // Общее число форм в формсете (нужно для добавления строк)
+    const totalFormsInput = document.getElementById('id_items-TOTAL_FORMS');
+    const formsetBody = document.getElementById('formsetBody');
+    const orderTotalEl = document.getElementById('orderTotal');
+
+    // Шаблон пустой строки (последняя форма с пустыми данными)
+    const emptyRowTemplate = formsetBody.lastElementChild
+        ? formsetBody.lastElementChild.cloneNode(true)
+        : null;
+
+    /**
+     * Пересчитать сумму строки и итог заказа.
+     */
+    function recalcTotals() {
+        let orderTotal = 0;
+
+        formsetBody.querySelectorAll('.formset-row').forEach(function (row) {
+            // Пропускаем строки, помеченные на удаление
+            const deleteCheckbox = row.querySelector('input[type="checkbox"][id$="-DELETE"]');
+            if (deleteCheckbox && deleteCheckbox.checked) {
+                row.querySelector('.line-total').textContent = '—';
+                return;
+            }
+
+            const qtyInput   = row.querySelector('input[id$="-quantity"]');
+            const priceInput = row.querySelector('input[id$="-purchase_price"]');
+            const lineTotalEl = row.querySelector('.line-total');
+
+            const qty   = parseFloat(qtyInput   ? qtyInput.value   : 0) || 0;
+            const price = parseFloat(priceInput  ? priceInput.value : 0) || 0;
+            const lineTotal = qty * price;
+
+            lineTotalEl.textContent = lineTotal > 0 ? lineTotal.toFixed(2) + ' руб.' : '—';
+            orderTotal += lineTotal;
+        });
+
+        orderTotalEl.textContent = orderTotal.toFixed(2) + ' руб.';
+    }
+
+    /**
+     * Навесить обработчики на строку формсета.
+     */
+    function bindRowEvents(row) {
+        // Пересчёт при изменении qty/price
+        row.addEventListener('input', recalcTotals);
+
+        // Кнопка «удалить строку»
+        const deleteBtn = row.querySelector('.delete-row-btn');
+        if (!deleteBtn) return;
+
+        deleteBtn.addEventListener('click', function () {
+            const deleteCheckbox = row.querySelector('input[type="checkbox"][id$="-DELETE"]');
+
+            if (deleteCheckbox) {
+                // Строка сохранённая → помечаем через Django DELETE
+                deleteCheckbox.checked = true;
+                row.classList.add('marked-for-delete');
+            } else {
+                // Строка новая → просто удаляем из DOM и декрементируем счётчик
+                row.remove();
+                totalFormsInput.value = parseInt(totalFormsInput.value) - 1;
+                renumberRows();
+            }
+            recalcTotals();
+        });
+    }
+
+    /**
+     * Перенумеровать индексы формсета после удаления строки.
+     */
+    function renumberRows() {
+        formsetBody.querySelectorAll('.formset-row').forEach(function (row, idx) {
+            row.querySelectorAll('input, select, textarea').forEach(function (el) {
+                ['name', 'id'].forEach(function (attr) {
+                    const val = el.getAttribute(attr);
+                    if (val) {
+                        el.setAttribute(attr, val.replace(/items-\d+/, 'items-' + idx));
+                    }
+                });
+            });
+            row.setAttribute('data-index', idx);
+        });
+        totalFormsInput.value = formsetBody.querySelectorAll('.formset-row').length;
+    }
+
+    // Навесить события на существующие строки
+    formsetBody.querySelectorAll('.formset-row').forEach(bindRowEvents);
+    recalcTotals();
+
+    // Кнопка «Добавить позицию»
+    document.getElementById('addRowBtn').addEventListener('click', function () {
+        const currentCount = parseInt(totalFormsInput.value);
+        const newRow = document.createElement('tr');
+        newRow.className = 'formset-row';
+        newRow.setAttribute('data-index', currentCount);
+
+        // Генерируем разметку новой пустой строки
+        newRow.innerHTML = `
+            <td class="ps-3">
+                <select name="items-${currentCount}-product" class="form-select" id="id_items-${currentCount}-product">
+                    <option value="">— Выберите товар —</option>
+                    ${getProductOptions()}
+                </select>
+                <input type="hidden" name="items-${currentCount}-id" id="id_items-${currentCount}-id">
+            </td>
+            <td>
+                <input type="number" name="items-${currentCount}-quantity" min="1"
+                       class="form-control" id="id_items-${currentCount}-quantity">
+            </td>
+            <td>
+                <input type="number" name="items-${currentCount}-purchase_price" min="0" step="0.01"
+                       class="form-control" id="id_items-${currentCount}-purchase_price">
+            </td>
+            <td class="text-end fw-semibold line-total">—</td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger delete-row-btn" title="Удалить строку">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>`;
+
+        formsetBody.appendChild(newRow);
+        totalFormsInput.value = currentCount + 1;
+        bindRowEvents(newRow);
+    });
+
+    /**
+     * Собирает options из первого select товаров (чтобы не дублировать запрос).
+     */
+    function getProductOptions() {
+        const firstSelect = formsetBody.querySelector('select[id$="-product"]');
+        if (!firstSelect) return '';
+        return Array.from(firstSelect.options).map(function (o) {
+            return `<option value="${o.value}">${o.text}</option>`;
+        }).join('');
+    }
+
+})();
+</script>
+{% endblock %}

@@ -71,13 +71,14 @@
                 {# Заказы — скрыты от сотрудника склада #}
                 {% if user.is_admin or user.is_manager %}
                 <li class="nav-item">
-                    <a class="nav-link nav-link-icon {% if request.resolver_match.app_name == 'orders' %}active{% endif %}"
-                       href="#">
+                    <a class="nav-link nav-link-icon {% if request.resolver_match.app_name == 'suppliers' and request.resolver_match.url_name == 'order_list' or request.resolver_match.url_name == 'order_detail' or request.resolver_match.url_name == 'order_create' or request.resolver_match.url_name == 'order_update' %}active{% endif %}"
+                       href="{% url 'suppliers:order_list' %}">
                         <i class="bi bi-clipboard-check"></i>
                         <span>Заказы</span>
                     </a>
                 </li>
                 {% endif %}
+
 
                 {# Аналитика — только admin и manager #}
                 {% if user.is_admin or user.is_manager %}

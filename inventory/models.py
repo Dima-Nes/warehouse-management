@@ -93,6 +93,15 @@ class Product(models.Model):
         verbose_name='Минимальный остаток',
         help_text='Порог для формирования сигнала о дефиците'
     )
+    supplier = models.ForeignKey(
+        'suppliers.Supplier',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='products',
+        verbose_name='Основной поставщик',
+        help_text='Поставщик, у которого закупается данный товар'
+    )
     description = models.TextField(
         blank=True,
         verbose_name='Описание товара'
