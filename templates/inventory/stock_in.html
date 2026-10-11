@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Приход товара{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    {# ====== Заголовок ====== #}
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+            <i class="bi bi-box-arrow-in-down fs-4 text-success"></i>
+        </div>
+        <div>
+            <h1 class="h3 fw-bold mb-0">Приход товара</h1>
+            <p class="text-muted mb-0 small">Регистрация поступления товаров на склад</p>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <a href="{% url 'inventory:stock_out' %}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-box-arrow-up me-1"></i>Расход
+            </a>
+            <a href="{% url 'inventory:movement_history' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-journal-text me-1"></i>Журнал
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-7">
+
+            <div class="card border-0 shadow-sm border-top border-4 border-success">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold text-success">
+                        <i class="bi bi-plus-circle me-2"></i>Оприходование товара
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {# Товар #}
+                        <div class="mb-3">
+                            <label for="{{ form.product.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.product.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.product }}
+                            {% if form.product.errors %}
+                            <div class="invalid-feedback d-block">{{ form.product.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        {# Количество #}
+                        <div class="mb-3">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.quantity.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}
+                            <div class="invalid-feedback d-block">{{ form.quantity.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        {# Документ #}
+                        <div class="mb-3">
+                            <label for="{{ form.document.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.document.label }}
+                            </label>
+                            {{ form.document }}
+                            <div class="form-text">{{ form.document.help_text }}</div>
+                            {% if form.document.errors %}
+                            <div class="invalid-feedback d-block">{{ form.document.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        {# Примечание #}
+                        <div class="mb-4">
+                            <label for="{{ form.note.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.note.label }}
+                            </label>
+                            {{ form.note }}
+                            {% if form.note.errors %}
+                            <div class="invalid-feedback d-block">{{ form.note.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        {# Нефилдовые ошибки формы #}
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors|join:", " }}</div>
+                        {% endif %}
+
+                        {# Кнопки #}
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'inventory:movement_history' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i>Отмена
+                            </a>
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-box-arrow-in-down me-1"></i>Оприходовать
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        {# ====== Последние приходы (мини-журнал справа) ====== #}
+        <div class="col-12 col-lg-5 mt-4 mt-lg-0">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-muted">
+                        <i class="bi bi-clock-history me-1"></i>Последние приходы
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% with recent=request.user.stock_movements.filter %}
+                    {% with last_in=request.session %}
+                    {% endwith %}
+                    {% endwith %}
+                    {% comment %} Загружаем через templatetag — данные придут из context_processor или отдельного include {% endcomment %}
+                    <div class="text-center py-4 text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Перейдите в <a href="{% url 'inventory:movement_history' %}?operation_type=in" class="text-decoration-none">журнал операций</a> для просмотра истории приходов.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

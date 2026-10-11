@@ -257,11 +257,27 @@ def order_change_status(request, pk):
             if order.can_transition_to(new_status):
                 order.status = new_status
                 order.save(update_fields=['status', 'updated_at'])
-                messages.success(
-                    request,
-                    f'Статус заказа № {order.number} изменён на '
-                    f'«{PurchaseOrder.Status(new_status).label}».'
-                )
+
+                # При переходе в «Выполнен / Поступил» — автоматический приход на склад
+                if new_status == PurchaseOrder.Status.DELIVERED:
+                    from inventory.services import post_purchase_order_delivery
+                    from django.core.exceptions import ValidationError as DjangoValidationError
+                    try:
+                        movements = post_purchase_order_delivery(order, user=request.user)
+                        messages.success(
+                            request,
+                            f'Статус заказа № {order.number} изменён на '
+                            f'«{PurchaseOrder.Status(new_status).label}». '
+                            f'Автоматически оприходовано {len(movements)} позиций.'
+                        )
+                    except DjangoValidationError as exc:
+                        messages.error(request, f'Ошибка оприходования: {exc.message}')
+                else:
+                    messages.success(
+                        request,
+                        f'Статус заказа № {order.number} изменён на '
+                        f'«{PurchaseOrder.Status(new_status).label}».'
+                    )
             else:
                 messages.error(
                     request,
@@ -269,6 +285,7 @@ def order_change_status(request, pk):
                 )
         else:
             messages.error(request, 'Некорректный статус.')
+
 
     return redirect('suppliers:order_detail', pk=order.pk)
 

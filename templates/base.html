@@ -93,13 +93,33 @@
 
                 {# Складские операции — виден сотруднику склада #}
                 {% if user.is_warehouse_staff %}
-                <li class="nav-item">
-                    <a class="nav-link nav-link-icon" href="#">
+                <li class="nav-item dropdown">
+                    <a class="nav-link nav-link-icon dropdown-toggle {% if request.resolver_match.url_name in 'stock_in,stock_out,movement_history' %}active{% endif %}"
+                       href="#" data-bs-toggle="dropdown" role="button">
                         <i class="bi bi-arrow-left-right"></i>
                         <span>Операции</span>
                     </a>
+                    <ul class="dropdown-menu shadow-sm border-0">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'inventory:stock_in' %}">
+                                <i class="bi bi-box-arrow-in-down text-success me-2"></i>Приход
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'inventory:stock_out' %}">
+                                <i class="bi bi-box-arrow-up text-danger me-2"></i>Расход / Списание
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'inventory:movement_history' %}">
+                                <i class="bi bi-journal-text text-muted me-2"></i>Журнал операций
+                            </a>
+                        </li>
+                    </ul>
                 </li>
                 {% endif %}
+
 
             </ul>
 

@@ -7,7 +7,7 @@ inventory/admin.py
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from .models import Category, Product
+from .models import Category, Product, StockMovement
 
 
 @admin.register(Category)
@@ -75,3 +75,24 @@ class ProductAdmin(admin.ModelAdmin):
         """Отображение суммарной стоимости."""
         return f"{obj.total_cost:,.2f} руб."
     total_cost_display.short_description = 'Сумма остатка'
+
+
+@admin.register(StockMovement)
+class StockMovementAdmin(admin.ModelAdmin):
+    """Журнал складских операций в панели администратора."""
+
+    list_display    = ('created_at', 'product', 'operation_type', 'quantity', 'created_by', 'document')
+    list_filter     = ('operation_type', 'created_at')
+    search_fields   = ('product__name', 'product__sku', 'document', 'note')
+    readonly_fields = ('created_at',)
+    raw_id_fields   = ('product', 'purchase_order')
+    date_hierarchy  = 'created_at'
+    ordering        = ('-created_at',)
+    fieldsets = (
+        ('Операция', {'fields': ('product', 'operation_type', 'quantity')}),
+        ('Основание', {'fields': ('document', 'note', 'purchase_order')}),
+        ('Служебная информация', {
+            'fields': ('created_by', 'created_at'),
+            'classes': ('collapse',),
+        }),
+    )

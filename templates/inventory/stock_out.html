@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Расход товара{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    {# ====== Заголовок ====== #}
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+            <i class="bi bi-box-arrow-up fs-4 text-danger"></i>
+        </div>
+        <div>
+            <h1 class="h3 fw-bold mb-0">Расход / Списание</h1>
+            <p class="text-muted mb-0 small">Отпуск, списание или перемещение товаров со склада</p>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <a href="{% url 'inventory:stock_in' %}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-box-arrow-in-down me-1"></i>Приход
+            </a>
+            <a href="{% url 'inventory:movement_history' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-journal-text me-1"></i>Журнал
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-7">
+
+            <div class="card border-0 shadow-sm border-top border-4 border-danger">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold text-danger">
+                        <i class="bi bi-dash-circle me-2"></i>Списание / Расход товара
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {# Товар #}
+                        <div class="mb-3">
+                            <label for="{{ form.product.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.product.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.product }}
+                            {% if form.product.errors %}
+                            <div class="invalid-feedback d-block">{{ form.product.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        {# Тип операции #}
+                        <div class="mb-3">
+                            <label for="{{ form.operation_type.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.operation_type.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.operation_type }}
+                            {% if form.operation_type.errors %}
+                            <div class="invalid-feedback d-block">{{ form.operation_type.errors|join:", " }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                <span class="badge bg-primary me-1">Расход</span> — отпуск клиенту/на производство.
+                                <span class="badge bg-danger me-1">Списание</span> — брак, порча.
+                                <span class="badge bg-info text-dark">Перемещение</span> — между зонами склада.
+                            </div>
+                        </div>
+
+                        {# Количество #}
+                        <div class="mb-3">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.quantity.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}
+                            <div class="invalid-feedback d-block">{{ form.quantity.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        {# Документ #}
+                        <div class="mb-3">
+                            <label for="{{ form.document.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.document.label }}
+                            </label>
+                            {{ form.document }}
+                            {% if form.document.errors %}
+                            <div class="invalid-feedback d-block">{{ form.document.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        {# Примечание #}
+                        <div class="mb-4">
+                            <label for="{{ form.note.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.note.label }}
+                            </label>
+                            {{ form.note }}
+                            {% if form.note.errors %}
+                            <div class="invalid-feedback d-block">{{ form.note.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        {# Нефилдовые ошибки (в т.ч. нехватка остатка) #}
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger border-0">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            {{ form.non_field_errors|join:", " }}
+                        </div>
+                        {% endif %}
+
+                        {# Кнопки #}
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'inventory:movement_history' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i>Отмена
+                            </a>
+                            <button type="submit" class="btn btn-danger px-4">
+                                <i class="bi bi-box-arrow-up me-1"></i>Провести операцию
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {# Информационный блок-предупреждение #}
+            <div class="alert alert-warning border-0 shadow-sm mt-3 d-flex gap-2 align-items-start">
+                <i class="bi bi-exclamation-triangle-fill text-warning mt-1"></i>
+                <div class="small">
+                    <strong>Внимание:</strong> система не позволит провести расход, если запрошенное количество
+                    превышает текущий остаток товара на складе.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Журнал складских операций{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    {# ====== Заголовок ====== #}
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">
+                <i class="bi bi-journal-text me-2 text-primary"></i>Журнал складских операций
+            </h1>
+            <p class="text-muted mb-0">
+                Записей:
+                <strong>{{ total_count }}</strong>
+                {% if total_count > 200 %}<span class="text-warning small">(показаны последние 200)</span>{% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'inventory:stock_in' %}" class="btn btn-success btn-sm">
+                <i class="bi bi-box-arrow-in-down me-1"></i>Приход
+            </a>
+            <a href="{% url 'inventory:stock_out' %}" class="btn btn-danger btn-sm">
+                <i class="bi bi-box-arrow-up me-1"></i>Расход
+            </a>
+        </div>
+    </div>
+
+    {# ====== Мини-статистика по типам ====== #}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-center py-3">
+                <div class="h4 fw-bold text-success mb-0">{{ stats.in }}</div>
+                <div class="text-muted small"><i class="bi bi-box-arrow-in-down me-1"></i>Приход</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-center py-3">
+                <div class="h4 fw-bold text-primary mb-0">{{ stats.out }}</div>
+                <div class="text-muted small"><i class="bi bi-box-arrow-up me-1"></i>Расход</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-center py-3">
+                <div class="h4 fw-bold text-info mb-0">{{ stats.transfer }}</div>
+                <div class="text-muted small"><i class="bi bi-arrow-left-right me-1"></i>Перемещение</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-center py-3">
+                <div class="h4 fw-bold text-danger mb-0">{{ stats.writeoff }}</div>
+                <div class="text-muted small"><i class="bi bi-trash me-1"></i>Списание</div>
+            </div>
+        </div>
+    </div>
+
+    {# ====== Фильтры ====== #}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-3">
+            <form method="get" class="row g-2 align-items-end">
+
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label small text-muted mb-1">{{ filter_form.product.label }}</label>
+                    {{ filter_form.product }}
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-2">
+                    <label class="form-label small text-muted mb-1">{{ filter_form.operation_type.label }}</label>
+                    {{ filter_form.operation_type }}
+                </div>
+
+                <div class="col-6 col-lg-2">
+                    <label class="form-label small text-muted mb-1">{{ filter_form.date_from.label }}</label>
+                    {{ filter_form.date_from }}
+                </div>
+
+                <div class="col-6 col-lg-2">
+                    <label class="form-label small text-muted mb-1">{{ filter_form.date_to.label }}</label>
+                    {{ filter_form.date_to }}
+                </div>
+
+                <div class="col-12 col-lg-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-primary btn-sm flex-grow-1">
+                        <i class="bi bi-funnel me-1"></i>Применить
+                    </button>
+                    <a href="{% url 'inventory:movement_history' %}" class="btn btn-outline-secondary btn-sm" title="Сбросить фильтры">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    {# ====== Таблица журнала ====== #}
+    {% if movements %}
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4" style="width:160px">Дата и время</th>
+                        <th>Товар</th>
+                        <th style="width:150px">Тип операции</th>
+                        <th class="text-center" style="width:100px">Кол-во</th>
+                        <th>Документ / Примечание</th>
+                        <th style="width:130px">Автор</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movement in movements %}
+                    <tr>
+                        <td class="ps-4 text-muted">
+                            {{ movement.created_at|date:"d.m.Y" }}<br>
+                            <span class="text-muted opacity-75">{{ movement.created_at|time:"H:i" }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">{{ movement.product.name }}</div>
+                            <div class="text-muted opacity-75">{{ movement.product.sku }}</div>
+                        </td>
+                        <td>
+                            <span class="badge {{ movement.operation_badge_class }}">
+                                {{ movement.get_operation_type_display }}
+                            </span>
+                        </td>
+                        <td class="text-center fw-semibold">
+                            <span class="{% if movement.is_incoming %}text-success{% else %}text-danger{% endif %}">
+                                {% if movement.is_incoming %}+{% else %}−{% endif %}{{ movement.quantity }}
+                                <span class="text-muted fw-normal">{{ movement.product.get_unit_display }}</span>
+                            </span>
+                        </td>
+                        <td>
+                            {% if movement.document %}
+                            <div>
+                                {% if movement.purchase_order %}
+                                <a href="{% url 'suppliers:order_detail' movement.purchase_order.pk %}"
+                                   class="text-decoration-none">
+                                    <i class="bi bi-file-text me-1"></i>{{ movement.document }}
+                                </a>
+                                {% else %}
+                                <i class="bi bi-file-text me-1 text-muted"></i>{{ movement.document }}
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% if movement.note %}
+                            <div class="text-muted opacity-75">{{ movement.note|truncatechars:60 }}</div>
+                            {% endif %}
+                            {% if not movement.document and not movement.note %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted">
+                            {% if movement.created_by %}
+                                {{ movement.created_by.get_full_name|default:movement.created_by.username }}
+                            {% else %}
+                                <span class="text-muted opacity-50">Система</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    {# ====== Пустое состояние ====== #}
+    <div class="text-center py-5">
+        <i class="bi bi-journal display-1 text-muted opacity-25"></i>
+        <h5 class="mt-3 text-muted fw-normal">Записей не найдено</h5>
+        <div class="d-flex gap-2 justify-content-center mt-3">
+            <a href="{% url 'inventory:stock_in' %}" class="btn btn-success btn-sm">
+                <i class="bi bi-box-arrow-in-down me-1"></i>Оприходовать товар
+            </a>
+            <a href="{% url 'inventory:stock_out' %}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-box-arrow-up me-1"></i>Провести расход
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
