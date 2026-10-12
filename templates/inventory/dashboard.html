@@ -1,74 +1,141 @@
 {% extends 'base.html' %}
-{% block title %}Дашборд{% endblock %}
+{% block title %}Главный дашборд склада{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-0">
+<div class="container-fluid px-4 py-4">
 
-    {# Заголовок страницы #}
-    <div class="page-header d-flex align-items-center justify-content-between">
+    {# ====== Заголовок и оперативные кнопки ====== #}
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
         <div>
-            <h2><i class="bi bi-speedometer2 text-primary me-2"></i>Дашборд</h2>
-            <p class="text-muted mb-0">Сводная информация о состоянии склада</p>
+            <h1 class="h3 fw-bold mb-1">
+                <i class="bi bi-speedometer2 text-primary me-2"></i>Панель управления складом
+            </h1>
+            <p class="text-muted mb-0">Оперативный мониторинг запасов, движений и закупок на {{ today|date:"d.m.Y" }}</p>
         </div>
-        <div class="text-muted small">
-            <i class="bi bi-clock me-1"></i>{{ today|date:"d.m.Y" }}
+        <div class="d-flex flex-wrap gap-2">
+            {% if user.is_warehouse_staff or user.is_manager or user.is_admin %}
+            <a href="{% url 'inventory:stock_in' %}" class="btn btn-success">
+                <i class="bi bi-box-arrow-in-down me-1"></i>Приход товара
+            </a>
+            <a href="{% url 'inventory:stock_out' %}" class="btn btn-danger">
+                <i class="bi bi-box-arrow-up me-1"></i>Расход товара
+            </a>
+            {% endif %}
+            {% if user.is_manager or user.is_admin %}
+            <a href="{% url 'suppliers:order_create' %}" class="btn btn-primary">
+                <i class="bi bi-clipboard-plus me-1"></i>Создать заказ
+            </a>
+            <a href="{% url 'analytics:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-bar-chart-line me-1"></i>Аналитика
+            </a>
+            {% endif %}
         </div>
     </div>
 
-    {# KPI-карточки #}
+    {# ====== 5 Ключевых KPI-карточек ====== #}
     <div class="row g-3 mb-4">
 
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="kpi-card" style="--kpi-color: #2563eb;">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <div class="kpi-label mb-2">Позиций в каталоге</div>
-                        <div class="kpi-value">{{ total_products }}</div>
+        {# 1. Всего товаров #}
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold text-uppercase">Товаров в базе</span>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-2 text-primary">
+                            <i class="bi bi-box-seam fs-5"></i>
+                        </div>
                     </div>
-                    <div class="kpi-icon" style="background: rgba(37,99,235,0.1); color: #2563eb;">
-                        <i class="bi bi-box-seam"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="kpi-card" style="--kpi-color: #dc2626;">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <div class="kpi-label mb-2">Дефицит (ниже порога)</div>
-                        <div class="kpi-value">{{ low_stock_count }}</div>
-                    </div>
-                    <div class="kpi-icon" style="background: rgba(220,38,38,0.1); color: #dc2626;">
-                        <i class="bi bi-exclamation-triangle"></i>
+                    <div class="h3 fw-bold mb-1">{{ total_products }}</div>
+                    <div class="text-muted small">
+                        <a href="{% url 'inventory:product_list' %}" class="text-decoration-none">
+                            Перейти в каталог <i class="bi bi-arrow-right"></i>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="kpi-card" style="--kpi-color: #16a34a;">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <div class="kpi-label mb-2">Поставщиков</div>
-                        <div class="kpi-value">{{ total_suppliers }}</div>
+        {# 2. Балансовая стоимость #}
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold text-uppercase">Стоимость склада</span>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-2 text-success">
+                            <i class="bi bi-cash-coin fs-5"></i>
+                        </div>
                     </div>
-                    <div class="kpi-icon" style="background: rgba(22,163,74,0.1); color: #16a34a;">
-                        <i class="bi bi-truck"></i>
+                    <div class="h3 fw-bold mb-1 text-success">{{ total_warehouse_value|floatformat:0 }} <span class="fs-6 fw-normal text-muted">руб.</span></div>
+                    <div class="text-muted small">Балансовый остаток</div>
+                </div>
+            </div>
+        </div>
+
+        {# 3. Дефицитные позиции #}
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-danger">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold text-uppercase">Дефицит</span>
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-2 text-danger">
+                            <i class="bi bi-exclamation-triangle fs-5"></i>
+                        </div>
+                    </div>
+                    <div class="h3 fw-bold mb-1 text-danger">{{ low_stock_count }} <span class="fs-6 fw-normal text-muted">поз.</span></div>
+                    <div class="text-muted small">
+                        {% if out_of_stock_count > 0 %}
+                        <span class="text-danger fw-semibold">{{ out_of_stock_count }}</span> нет на складе
+                        {% else %}
+                        Все товары в наличии
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="kpi-card" style="--kpi-color: #d97706;">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <div class="kpi-label mb-2">Открытых заказов</div>
-                        <div class="kpi-value">{{ open_orders }}</div>
+        {# 4. Поставщики #}
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold text-uppercase">Поставщики</span>
+                        <div class="rounded-circle bg-info bg-opacity-10 p-2 text-info">
+                            <i class="bi bi-truck fs-5"></i>
+                        </div>
                     </div>
-                    <div class="kpi-icon" style="background: rgba(217,119,6,0.1); color: #d97706;">
-                        <i class="bi bi-clipboard-check"></i>
+                    <div class="h3 fw-bold mb-1">{{ total_suppliers }}</div>
+                    <div class="text-muted small">
+                        {% if user.is_admin or user.is_manager %}
+                        <a href="{% url 'suppliers:supplier_list' %}" class="text-decoration-none">
+                            Реестр контрагентов <i class="bi bi-arrow-right"></i>
+                        </a>
+                        {% else %}
+                        Контрагентов в базе
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# 5. Активные заказы #}
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold text-uppercase">Активные заказы</span>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-2 text-warning">
+                            <i class="bi bi-clipboard-check fs-5"></i>
+                        </div>
+                    </div>
+                    <div class="h3 fw-bold mb-1 text-warning">{{ active_orders_count }}</div>
+                    <div class="text-muted small">
+                        {% if user.is_admin or user.is_manager %}
+                        <a href="{% url 'suppliers:order_list' %}" class="text-decoration-none">
+                            В работе у поставщиков <i class="bi bi-arrow-right"></i>
+                        </a>
+                        {% else %}
+                        Заказов в работе
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -76,54 +143,248 @@
 
     </div>
 
-    {# Нижняя секция: быстрые ссылки #}
-    <div class="row g-3">
-        <div class="col-12 col-lg-6">
-            <div class="section-card p-3">
-                <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
-                    <i class="bi bi-lightning-charge text-warning"></i>Быстрые действия
-                </h6>
-                <div class="d-flex flex-wrap gap-2">
-                    <a href="{% url 'inventory:product_list' %}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-box-seam me-1"></i>Каталог товаров
+    {# ====== 2 Интерактивных графика Chart.js ====== #}
+    <div class="row g-4 mb-4">
+        {# График динамики движения за 30 дней #}
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-graph-up me-2 text-primary"></i>Динамика складских операций (30 дней)
+                    </h5>
+                    <a href="{% url 'inventory:movement_history' %}" class="small text-decoration-none">
+                        Журнал проводок <i class="bi bi-arrow-right"></i>
                     </a>
+                </div>
+                <div class="card-body p-3">
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="dynamicsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Круговая диаграмма категорий #}
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-pie-chart me-2 text-primary"></i>Доли категорий
+                    </h5>
+                </div>
+                <div class="card-body p-3 d-flex flex-column align-items-center justify-content-center">
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <div class="text-muted small text-center mt-2">
+                        Структура запасов на складе
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ====== Таблица: Товары, требующие срочного заказа ====== #}
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold text-danger">
+                        <i class="bi bi-alarm me-2"></i>Товары, требующие срочного заказа
+                    </h5>
                     {% if user.is_admin or user.is_manager %}
-                    <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-truck me-1"></i>Поставщики
+                    <a href="{% url 'analytics:forecast' %}" class="small text-decoration-none">
+                        Полный прогноз <i class="bi bi-arrow-right"></i>
                     </a>
                     {% endif %}
-                    {% if user.is_admin %}
-                    <a href="/admin/" class="btn btn-outline-dark btn-sm">
-                        <i class="bi bi-gear me-1"></i>Администрирование
-                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if urgent_items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Товар / SKU</th>
+                                    <th class="text-center">Остаток</th>
+                                    <th class="text-center">Расход/день (ADU)</th>
+                                    <th class="text-center">Дней до дефицита</th>
+                                    <th>Поставщик</th>
+                                    <th class="text-end pe-3">Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in urgent_items %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <a href="{% url 'inventory:product_detail' item.product.pk %}" class="fw-semibold text-dark text-decoration-none">
+                                            {{ item.product.name }}
+                                        </a>
+                                        <div class="text-muted small">SKU: {{ item.product.sku }}</div>
+                                    </td>
+                                    <td class="text-center fw-bold">
+                                        <span class="{% if item.current_quantity == 0 %}text-danger{% else %}text-warning{% endif %}">
+                                            {{ item.current_quantity }} {{ item.product.get_unit_display }}
+                                        </span>
+                                        <div class="text-muted small opacity-75">мин: {{ item.min_quantity }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if item.adu > 0 %}
+                                        <strong>{{ item.adu }}</strong>/дн.
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if item.days_until_stockout is not None %}
+                                            {% if item.days_until_stockout <= 0 %}
+                                                <span class="badge bg-danger">Исчерпан</span>
+                                            {% elif item.days_until_stockout <= 7 %}
+                                                <span class="badge bg-danger">{{ item.days_until_stockout }} дн.</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">{{ item.days_until_stockout }} дн.</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">Ниже порога</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.product.supplier %}
+                                        <span class="text-truncate d-inline-block" style="max-width: 150px;">
+                                            {{ item.product.supplier.name }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">Не назначен</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        {% if user.is_admin or user.is_manager %}
+                                            {% if item.product.supplier %}
+                                            <a href="{% url 'suppliers:order_create' %}?supplier={{ item.product.supplier.pk }}"
+                                               class="btn btn-sm btn-outline-danger">
+                                                Заказать
+                                            </a>
+                                            {% else %}
+                                            <a href="{% url 'suppliers:order_create' %}" class="btn btn-sm btn-outline-secondary">
+                                                Заказ
+                                            </a>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-light text-muted border">Дефицит</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-check2-circle text-success fs-1 d-block mb-1"></i>
+                        Все складские позиции обеспечены достаточным запасом
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-lg-6">
-            <div class="section-card p-3">
-                <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
-                    <i class="bi bi-person-circle text-primary"></i>Ваши данные
-                </h6>
-                <div class="d-flex align-items-center gap-3">
-                    <div>
-                        <div class="fw-semibold">{{ user.get_full_name|default:user.username }}</div>
-                        <div class="text-muted small">{{ user.email }}</div>
+        {# Правая колонка: Последние операции и текущий профиль #}
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-clock-history me-2 text-primary"></i>Последние проводки
+                    </h5>
+                    <a href="{% url 'inventory:movement_history' %}" class="small text-decoration-none">
+                        Все <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_movements %}
+                    <ul class="list-group list-group-flush small">
+                        {% for m in recent_movements %}
+                        <li class="list-group-item px-3 py-2 d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="badge {{ m.operation_badge_class }} me-1">
+                                    {{ m.get_operation_type_display }}
+                                </span>
+                                <span class="fw-semibold">{{ m.product.name }}</span>
+                                <div class="text-muted small">
+                                    {{ m.created_at|date:"d.m H:i" }}
+                                    {% if m.document %}&bull; {{ m.document|truncatechars:20 }}{% endif %}
+                                </div>
+                            </div>
+                            <div class="fw-bold {% if m.is_incoming %}text-success{% else %}text-danger{% endif %} text-nowrap">
+                                {% if m.is_incoming %}+{% else %}−{% endif %}{{ m.quantity }} {{ m.product.get_unit_display }}
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="text-center py-4 text-muted small">
+                        Проводки пока не зарегистрированы
                     </div>
-                    <div class="ms-auto">
-                        {% if user.is_admin %}
-                            <span class="badge bg-danger">{{ user.get_role_display }}</span>
-                        {% elif user.is_manager %}
-                            <span class="badge bg-primary">{{ user.get_role_display }}</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ user.get_role_display }}</span>
-                        {% endif %}
-                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const dynamicsData = {{ dynamics_json|safe }};
+    const categoryData = {{ category_json|safe }};
+
+    // 1. Динамика операций
+    const dynamicsCtx = document.getElementById('dynamicsChart');
+    if (dynamicsCtx) {
+        new Chart(dynamicsCtx, {
+            type: 'line',
+            data: dynamicsData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'top' }
+                }
+            }
+        });
+    }
+
+    // 2. Доли категорий
+    const categoryCtx = document.getElementById('categoryChart');
+    if (categoryCtx) {
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryData.labels,
+                datasets: [{
+                    data: categoryData.quantities,
+                    backgroundColor: categoryData.colors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, font: { size: 10 } }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

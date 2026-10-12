@@ -9,6 +9,7 @@ inventory/views.py
 Студент: Нестерук Д.С., группа ПО-2409
 """
 
+import json
 import datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -20,48 +21,78 @@ from .models import Product, Category, StockMovement
 from .forms import CategoryForm, ProductForm, StockInForm, StockOutForm, MovementFilterForm
 from .services import register_movement
 from accounts.decorators import warehouse_staff_required, manager_or_admin_required
-
+from analytics.services import (
+    get_movement_dynamics_data,
+    get_category_distribution_data,
+    calculate_product_forecast,
+)
 
 
 # ===========================================================================
-# ДАШБОРД
+# ДАШБОРД (Итерация 5: Сводная аналитика и оперативный контроль)
 # ===========================================================================
 
 @login_required
 def dashboard(request):
     """
-    Главный аналитический дашборд системы.
-    Передаёт в шаблон ключевые KPI.
+    Главный сводный дашборд системы управления складом.
+    Передаёт в шаблон 5 ключевых KPI, 2 интерактивных графика Chart.js,
+    таблицу товаров, требующих срочного заказа, и последние складские проводки.
     """
-    total_products = Product.objects.count()
-    low_stock_count = Product.objects.filter(quantity__lte=F('min_quantity')).count()
-    out_of_stock_count = Product.objects.filter(quantity=0).count()
+    all_products = Product.objects.select_related('category', 'supplier').all()
+    total_products = all_products.count()
+    low_stock_count = all_products.filter(quantity__lte=F('min_quantity')).count()
+    out_of_stock_count = all_products.filter(quantity=0).count()
+    total_warehouse_value = sum(p.total_cost for p in all_products)
 
     try:
         from suppliers.models import Supplier, PurchaseOrder
         total_suppliers = Supplier.objects.count()
-        open_orders = PurchaseOrder.objects.filter(
-            status__in=['draft', 'sent']
+        active_orders_count = PurchaseOrder.objects.filter(
+            status__in=[PurchaseOrder.Status.DRAFT, PurchaseOrder.Status.SENT]
         ).count()
     except Exception:
         total_suppliers = 0
-        open_orders = 0
+        active_orders_count = 0
 
-    # Последние 5 операций для блока «Активность»
+    # Данные для двух графиков Chart.js
+    dynamics_data = get_movement_dynamics_data(days=30)
+    category_data = get_category_distribution_data()
+
+    # Таблица «Товары, требующие срочного заказа»
+    urgent_items = []
+    for p in all_products:
+        forecast = calculate_product_forecast(p, days=30)
+        if forecast['status'] in ['critical', 'warning']:
+            urgent_items.append(forecast)
+
+    def sort_urgency(item):
+        days = item['days_until_stockout'] if item['days_until_stockout'] is not None else 9999
+        return (days, item['current_quantity'])
+
+    urgent_items.sort(key=sort_urgency)
+    urgent_items = urgent_items[:7]
+
+    # Последние 5 складских проводок
     recent_movements = StockMovement.objects.select_related(
         'product', 'created_by'
     ).all()[:5]
 
     context = {
-        'total_products':    total_products,
-        'low_stock_count':   low_stock_count,
-        'out_of_stock_count': out_of_stock_count,
-        'total_suppliers':   total_suppliers,
-        'open_orders':       open_orders,
-        'recent_movements':  recent_movements,
-        'today':             datetime.date.today(),
+        'total_products':        total_products,
+        'total_warehouse_value': total_warehouse_value,
+        'low_stock_count':       low_stock_count,
+        'out_of_stock_count':     out_of_stock_count,
+        'total_suppliers':       total_suppliers,
+        'active_orders_count':   active_orders_count,
+        'urgent_items':          urgent_items,
+        'recent_movements':      recent_movements,
+        'dynamics_json':         json.dumps(dynamics_data, ensure_ascii=False),
+        'category_json':         json.dumps(category_data, ensure_ascii=False),
+        'today':                 datetime.date.today(),
     }
     return render(request, 'inventory/dashboard.html', context)
+
 
 
 # ===========================================================================
