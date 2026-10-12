@@ -270,10 +270,11 @@ def order_change_status(request, pk):
                             request,
                             f'Статус заказа № {order.number} изменён на '
                             f'«{PurchaseOrder.Status(new_status).label}». '
-                            f'Автоматически оприходовано {len(movements)} позиций.'
+                            f'Автоматически принято на склад {len(movements)} позиций.'
                         )
                     except DjangoValidationError as exc:
-                        messages.error(request, f'Ошибка оприходования: {exc.message}')
+                        messages.error(request, f'Ошибка принятия на склад: {exc.message}')
+
                 else:
                     messages.success(
                         request,

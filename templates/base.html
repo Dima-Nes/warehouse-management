@@ -60,7 +60,7 @@
                 {# Поставщики — скрыты от сотрудника склада #}
                 {% if user.is_admin or user.is_manager %}
                 <li class="nav-item">
-                    <a class="nav-link nav-link-icon {% if request.resolver_match.app_name == 'suppliers' %}active{% endif %}"
+                    <a class="nav-link nav-link-icon {% if request.resolver_match.app_name == 'suppliers' and request.resolver_match.url_name in 'supplier_list,supplier_detail,supplier_create,supplier_update' %}active{% endif %}"
                        href="{% url 'suppliers:supplier_list' %}">
                         <i class="bi bi-truck"></i>
                         <span>Поставщики</span>
@@ -71,13 +71,14 @@
                 {# Заказы — скрыты от сотрудника склада #}
                 {% if user.is_admin or user.is_manager %}
                 <li class="nav-item">
-                    <a class="nav-link nav-link-icon {% if request.resolver_match.app_name == 'suppliers' and request.resolver_match.url_name == 'order_list' or request.resolver_match.url_name == 'order_detail' or request.resolver_match.url_name == 'order_create' or request.resolver_match.url_name == 'order_update' %}active{% endif %}"
+                    <a class="nav-link nav-link-icon {% if request.resolver_match.app_name == 'suppliers' and request.resolver_match.url_name in 'order_list,order_detail,order_create,order_update' %}active{% endif %}"
                        href="{% url 'suppliers:order_list' %}">
                         <i class="bi bi-clipboard-check"></i>
                         <span>Заказы</span>
                     </a>
                 </li>
                 {% endif %}
+
 
 
                 {# Аналитика — только admin и manager #}
@@ -201,12 +202,10 @@
                 <i class="bi bi-boxes me-1"></i>
                 Система управления складом &copy; 2026
             </div>
-            <div class="col-auto text-muted small">
-                Нестерук Д.С., группа ПО-2409
-            </div>
         </div>
     </div>
 </footer>
+
 
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

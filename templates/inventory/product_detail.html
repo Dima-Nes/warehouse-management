@@ -138,8 +138,9 @@
                     <div class="d-grid gap-2">
                         <a href="{% url 'inventory:stock_in' %}?product={{ product.pk }}"
                            class="btn btn-outline-success btn-sm">
-                            <i class="bi bi-box-arrow-in-down me-1"></i>Оприходовать
+                            <i class="bi bi-box-arrow-in-down me-1"></i>Оформить приход
                         </a>
+
                         <a href="{% url 'inventory:stock_out' %}?product={{ product.pk }}"
                            class="btn btn-outline-danger btn-sm">
                             <i class="bi bi-box-arrow-up me-1"></i>Провести расход
@@ -232,8 +233,9 @@
                         <div class="mt-3 d-flex gap-2 justify-content-center">
                             <a href="{% url 'inventory:stock_in' %}?product={{ product.pk }}"
                                class="btn btn-success btn-sm">
-                                <i class="bi bi-box-arrow-in-down me-1"></i>Оприходовать
+                                <i class="bi bi-box-arrow-in-down me-1"></i>Оформить приход
                             </a>
+
                         </div>
                         {% endif %}
                     </div>
