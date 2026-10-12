@@ -1,7 +1,10 @@
 """
 inventory/views.py
-Контроллеры приложения inventory: дашборд, каталог товаров,
-складские операции (приход, расход/списание) и журнал движений.
+Контроллеры приложения inventory:
+  — Дашборд
+  — Каталог товаров (список)
+  — CRUD товаров и категорий  (Итерация 3)
+  — Складские операции: приход, расход/списание, журнал движений
 
 Студент: Нестерук Д.С., группа ПО-2409
 """
@@ -14,9 +17,10 @@ from django.db.models import Count, Q, F, Sum
 from django.core.exceptions import ValidationError
 
 from .models import Product, Category, StockMovement
-from .forms import StockInForm, StockOutForm, MovementFilterForm
+from .forms import CategoryForm, ProductForm, StockInForm, StockOutForm, MovementFilterForm
 from .services import register_movement
 from accounts.decorators import warehouse_staff_required, manager_or_admin_required
+
 
 
 # ===========================================================================
@@ -236,3 +240,202 @@ def movement_history_view(request):
         'op_types':    StockMovement.OperationType,
     }
     return render(request, 'inventory/movement_history.html', context)
+
+
+# ===========================================================================
+# CRUD ТОВАРОВ (Итерация 3)
+# ===========================================================================
+
+@login_required
+def product_detail(request, pk):
+    """
+    Детальная карточка товара.
+    Показывает технические характеристики, текущий остаток, статус дефицита
+    и историю последних складских операций по данному товару.
+    """
+    product = get_object_or_404(
+        Product.objects.select_related('category', 'supplier'),
+        pk=pk
+    )
+
+    # Последние 15 проводок по товару
+    recent_movements = (
+        StockMovement.objects
+        .filter(product=product)
+        .select_related('created_by', 'purchase_order')
+        .order_by('-created_at')[:15]
+    )
+
+    context = {
+        'product':          product,
+        'recent_movements': recent_movements,
+    }
+    return render(request, 'inventory/product_detail.html', context)
+
+
+@manager_or_admin_required
+def product_create(request):
+    """
+    Создание новой карточки товара.
+    Доступно: admin, manager.
+    """
+    if request.method == 'POST':
+        form = ProductForm(request.POST)
+        if form.is_valid():
+            product = form.save()
+            messages.success(
+                request,
+                f'Товар «{product.name}» (SKU: {product.sku}) успешно добавлен в каталог.'
+            )
+            return redirect('inventory:product_detail', pk=product.pk)
+    else:
+        form = ProductForm()
+
+    context = {
+        'form':         form,
+        'page_title':   'Новый товар',
+        'submit_label': 'Добавить товар',
+    }
+    return render(request, 'inventory/product_form.html', context)
+
+
+@manager_or_admin_required
+def product_update(request, pk):
+    """
+    Редактирование карточки товара.
+    Доступно: admin, manager.
+    """
+    product = get_object_or_404(Product, pk=pk)
+
+    if request.method == 'POST':
+        form = ProductForm(request.POST, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                f'Данные товара «{product.name}» успешно обновлены.'
+            )
+            return redirect('inventory:product_detail', pk=product.pk)
+    else:
+        form = ProductForm(instance=product)
+
+    context = {
+        'form':         form,
+        'product':      product,
+        'page_title':   f'Редактирование: {product.name}',
+        'submit_label': 'Сохранить изменения',
+    }
+    return render(request, 'inventory/product_form.html', context)
+
+
+@manager_or_admin_required
+def product_delete(request, pk):
+    """
+    Удаление товара (POST из модального окна).
+    Защита: нельзя удалить товар с историей движений.
+    """
+    product = get_object_or_404(Product, pk=pk)
+
+    if request.method == 'POST':
+        movements_count = product.movements.count()
+        if movements_count:
+            messages.error(
+                request,
+                f'Нельзя удалить «{product.name}»: существует {movements_count} складских операций. '
+                f'Сначала перенесите или аннулируйте операции.'
+            )
+            return redirect('inventory:product_detail', pk=product.pk)
+
+        name = product.name
+        product.delete()
+        messages.success(request, f'Товар «{name}» удалён из каталога.')
+        return redirect('inventory:product_list')
+
+    return redirect('inventory:product_detail', pk=product.pk)
+
+
+# ===========================================================================
+# CRUD КАТЕГОРИЙ (Итерация 3)
+# ===========================================================================
+
+@manager_or_admin_required
+def category_list(request):
+    """
+    Список категорий с числом товаров в каждой.
+    """
+    categories = Category.objects.annotate(
+        products_count=Count('products')
+    ).order_by('name')
+
+    context = {
+        'categories': categories,
+    }
+    return render(request, 'inventory/category_list.html', context)
+
+
+@manager_or_admin_required
+def category_create(request):
+    """Создание новой категории."""
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            category = form.save()
+            messages.success(request, f'Категория «{category.name}» создана.')
+            return redirect('inventory:category_list')
+    else:
+        form = CategoryForm()
+
+    context = {
+        'form':         form,
+        'page_title':   'Новая категория',
+        'submit_label': 'Создать категорию',
+    }
+    return render(request, 'inventory/category_form.html', context)
+
+
+@manager_or_admin_required
+def category_update(request, pk):
+    """Редактирование существующей категории."""
+    category = get_object_or_404(Category, pk=pk)
+
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Категория «{category.name}» обновлена.')
+            return redirect('inventory:category_list')
+    else:
+        form = CategoryForm(instance=category)
+
+    context = {
+        'form':         form,
+        'category':     category,
+        'page_title':   f'Редактирование: {category.name}',
+        'submit_label': 'Сохранить изменения',
+    }
+    return render(request, 'inventory/category_form.html', context)
+
+
+@manager_or_admin_required
+def category_delete(request, pk):
+    """
+    Удаление категории (POST).
+    Защита: PROTECT на уровне БД не позволит удалить категорию с товарами.
+    """
+    category = get_object_or_404(Category, pk=pk)
+
+    if request.method == 'POST':
+        if category.products.exists():
+            messages.error(
+                request,
+                f'Нельзя удалить категорию «{category.name}»: '
+                f'в ней {category.products.count()} товаров.'
+            )
+            return redirect('inventory:category_list')
+
+        name = category.name
+        category.delete()
+        messages.success(request, f'Категория «{name}» удалена.')
+        return redirect('inventory:category_list')
+
+    return redirect('inventory:category_list')

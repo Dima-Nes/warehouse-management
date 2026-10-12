@@ -1,6 +1,9 @@
 """
 inventory/forms.py
-Формы для складских операций: приход, расход/списание.
+Формы приложения inventory:
+  — ProductForm, CategoryForm   (CRUD номенклатуры)
+  — StockInForm, StockOutForm   (складские операции)
+  — MovementFilterForm          (фильтр журнала)
 
 Студент: Нестерук Д.С., группа ПО-2409
 """
@@ -8,7 +11,7 @@ inventory/forms.py
 from django import forms
 from django.core.exceptions import ValidationError
 
-from .models import Product, StockMovement
+from .models import Category, Product, StockMovement
 
 
 class BootstrapMixin:
@@ -26,6 +29,84 @@ class BootstrapMixin:
             else:
                 widget.attrs['class'] = f'{existing} form-control'.strip()
 
+
+# ===========================================================================
+# ФОРМЫ НОМЕНКЛАТУРЫ
+# ===========================================================================
+
+class CategoryForm(BootstrapMixin, forms.ModelForm):
+    """
+    Форма создания и редактирования категории товаров.
+    """
+
+    class Meta:
+        model = Category
+        fields = ['name', 'description']
+        labels = {
+            'name':        'Название категории',
+            'description': 'Описание',
+        }
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
+
+    def clean_name(self):
+        return self.cleaned_data.get('name', '').strip()
+
+
+class ProductForm(BootstrapMixin, forms.ModelForm):
+    """
+    Форма создания и редактирования карточки товара.
+    Включает выбор категории, поставщика, единицы измерения.
+    """
+
+    class Meta:
+        model = Product
+        fields = [
+            'sku', 'name', 'category', 'supplier',
+            'unit', 'price', 'quantity', 'min_quantity',
+            'description',
+        ]
+        labels = {
+            'sku':          'Артикул (SKU)',
+            'name':         'Наименование товара',
+            'category':     'Категория',
+            'supplier':     'Основной поставщик',
+            'unit':         'Единица измерения',
+            'price':        'Базовая цена (руб.)',
+            'quantity':     'Текущий остаток',
+            'min_quantity': 'Минимальный остаток',
+            'description':  'Описание товара',
+        }
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'price':       forms.NumberInput(attrs={'min': 0, 'step': '0.01'}),
+            'quantity':    forms.NumberInput(attrs={'min': 0}),
+            'min_quantity': forms.NumberInput(attrs={'min': 0}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].empty_label = '— Выберите категорию —'
+        self.fields['supplier'].empty_label = '— Без поставщика —'
+        self.fields['supplier'].required = False
+
+    def clean_sku(self):
+        return self.cleaned_data.get('sku', '').strip().upper()
+
+    def clean_name(self):
+        return self.cleaned_data.get('name', '').strip()
+
+    def clean_price(self):
+        price = self.cleaned_data.get('price')
+        if price is not None and price < 0:
+            raise ValidationError('Цена не может быть отрицательной.')
+        return price
+
+
+# ===========================================================================
+# ФОРМЫ СКЛАДСКИХ ОПЕРАЦИЙ
+# ===========================================================================
 
 class StockInForm(BootstrapMixin, forms.Form):
     """

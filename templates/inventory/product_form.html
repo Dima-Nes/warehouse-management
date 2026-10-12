@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    {# ====== Хлебные крошки ====== #}
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'inventory:product_list' %}" class="text-decoration-none">
+                    <i class="bi bi-box-seam me-1"></i>Товары
+                </a>
+            </li>
+            {% if product %}
+            <li class="breadcrumb-item">
+                <a href="{% url 'inventory:product_detail' product.pk %}" class="text-decoration-none">
+                    {{ product.name }}
+                </a>
+            </li>
+            {% endif %}
+            <li class="breadcrumb-item active">{{ page_title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-9 col-xl-8">
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h4 class="mb-0 fw-bold">
+                        <i class="bi bi-{% if product %}pencil{% else %}plus-lg{% endif %} me-2 text-primary"></i>
+                        {{ page_title }}
+                    </h4>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {# -------- Идентификация -------- #}
+                        <h6 class="text-muted text-uppercase fw-semibold small mb-3">
+                            <i class="bi bi-upc me-1"></i>Идентификация
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-12 col-md-4">
+                                <label for="{{ form.sku.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.sku.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.sku }}
+                                {% if form.sku.errors %}
+                                <div class="invalid-feedback d-block">{{ form.sku.errors|join:", " }}</div>
+                                {% endif %}
+                                <div class="form-text">{{ form.sku.help_text }}</div>
+                            </div>
+                            <div class="col-12 col-md-8">
+                                <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.name.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.name.errors|join:", " }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {# -------- Классификация -------- #}
+                        <h6 class="text-muted text-uppercase fw-semibold small mb-3">
+                            <i class="bi bi-diagram-3 me-1"></i>Классификация
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-12 col-md-6">
+                                <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.category.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                <div class="invalid-feedback d-block">{{ form.category.errors|join:", " }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="{{ form.supplier.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.supplier.label }}
+                                </label>
+                                {{ form.supplier }}
+                                {% if form.supplier.errors %}
+                                <div class="invalid-feedback d-block">{{ form.supplier.errors|join:", " }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {# -------- Учётные параметры -------- #}
+                        <h6 class="text-muted text-uppercase fw-semibold small mb-3">
+                            <i class="bi bi-calculator me-1"></i>Учётные параметры
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-6 col-md-3">
+                                <label for="{{ form.unit.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.unit.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.unit }}
+                                {% if form.unit.errors %}
+                                <div class="invalid-feedback d-block">{{ form.unit.errors|join:", " }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label for="{{ form.price.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.price.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.price }}
+                                {% if form.price.errors %}
+                                <div class="invalid-feedback d-block">{{ form.price.errors|join:", " }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label for="{{ form.quantity.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.quantity.label }}
+                                </label>
+                                {{ form.quantity }}
+                                {% if form.quantity.errors %}
+                                <div class="invalid-feedback d-block">{{ form.quantity.errors|join:", " }}</div>
+                                {% endif %}
+                                {% if product %}
+                                <div class="form-text text-warning">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Изменяйте через «Приход/Расход» для точного учёта
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label for="{{ form.min_quantity.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.min_quantity.label }}
+                                </label>
+                                {{ form.min_quantity }}
+                                {% if form.min_quantity.errors %}
+                                <div class="invalid-feedback d-block">{{ form.min_quantity.errors|join:", " }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {# -------- Описание -------- #}
+                        <h6 class="text-muted text-uppercase fw-semibold small mb-3">
+                            <i class="bi bi-file-text me-1"></i>Дополнительно
+                        </h6>
+                        <div class="mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.description.label }}
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ form.description.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        {# Кнопки #}
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% if product %}{% url 'inventory:product_detail' product.pk %}{% else %}{% url 'inventory:product_list' %}{% endif %}"
+                               class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i>Отмена
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check-lg me-1"></i>{{ submit_label }}
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

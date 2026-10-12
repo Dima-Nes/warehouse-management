@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Категории товаров{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    {# ====== Заголовок ====== #}
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">
+                <i class="bi bi-diagram-3 me-2 text-primary"></i>Категории товаров
+            </h1>
+            <p class="text-muted mb-0">Всего: <strong>{{ categories|length }}</strong></p>
+        </div>
+        <a href="{% url 'inventory:category_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Добавить категорию
+        </a>
+    </div>
+
+    {% if categories %}
+    <div class="row g-3">
+        {% for cat in categories %}
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between mb-2">
+                        <h5 class="fw-bold mb-0">{{ cat.name }}</h5>
+                        <div class="btn-group btn-group-sm ms-2">
+                            <a href="{% url 'inventory:category_update' cat.pk %}"
+                               class="btn btn-outline-secondary" title="Редактировать">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button"
+                                    class="btn btn-outline-danger"
+                                    title="Удалить"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal{{ cat.pk }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        {{ cat.description|default:"Описание не указано"|truncatechars:80 }}
+                    </p>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="badge bg-primary rounded-pill">
+                            {{ cat.products_count }} товаров
+                        </span>
+                        {% if cat.products_count %}
+                        <a href="{% url 'inventory:product_list' %}?category={{ cat.pk }}"
+                           class="small text-decoration-none text-muted">
+                            Смотреть <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {# Модальные окна подтверждения удаления #}
+    {% for cat in categories %}
+    <div class="modal fade" id="deleteModal{{ cat.pk }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title text-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Удаление категории
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Удалить категорию <strong>«{{ cat.name }}»</strong>?
+                    {% if cat.products_count %}
+                    <div class="alert alert-warning mt-2 mb-0 small">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        В категории {{ cat.products_count }} товаров — удаление невозможно.
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                        Отмена
+                    </button>
+                    <form method="post" action="{% url 'inventory:category_delete' cat.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm"
+                                {% if cat.products_count %}disabled{% endif %}>
+                            <i class="bi bi-trash me-1"></i>Удалить
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-diagram-3 display-1 text-muted opacity-25"></i>
+        <h5 class="mt-3 text-muted fw-normal">Категорий пока нет</h5>
+        <a href="{% url 'inventory:category_create' %}" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-lg me-1"></i>Создать первую категорию
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

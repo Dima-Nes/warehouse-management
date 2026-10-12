@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    {# ====== Хлебные крошки ====== #}
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'inventory:product_list' %}" class="text-decoration-none">
+                    <i class="bi bi-box-seam me-1"></i>Товары
+                </a>
+            </li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+
+        {# ====== Левая колонка: карточка товара ====== #}
+        <div class="col-12 col-lg-4">
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-box-seam me-2 text-primary"></i>Карточка товара
+                    </h5>
+                    {% if user.is_admin or user.is_manager %}
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'inventory:product_update' product.pk %}"
+                           class="btn btn-outline-secondary" title="Редактировать">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button type="button"
+                                class="btn btn-outline-danger"
+                                title="Удалить"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deleteModal">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+                    <h4 class="fw-bold mb-1">{{ product.name }}</h4>
+                    <p class="text-muted small mb-3">
+                        <i class="bi bi-upc me-1"></i>SKU: <code>{{ product.sku }}</code>
+                    </p>
+
+                    {# Статус остатка #}
+                    <div class="mb-3">
+                        {% if product.is_out_of_stock %}
+                        <span class="badge bg-danger fs-6 px-3 py-2">
+                            <i class="bi bi-x-circle me-1"></i>Нет на складе
+                        </span>
+                        {% elif product.is_low_stock %}
+                        <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                            <i class="bi bi-exclamation-triangle me-1"></i>Дефицит
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success fs-6 px-3 py-2">
+                            <i class="bi bi-check-circle me-1"></i>В наличии
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <dl class="row small mb-0">
+                        <dt class="col-5 text-muted">Категория</dt>
+                        <dd class="col-7">
+                            <span class="badge bg-light text-dark border">{{ product.category.name }}</span>
+                        </dd>
+
+                        <dt class="col-5 text-muted">Ед. измерения</dt>
+                        <dd class="col-7">{{ product.get_unit_display }}</dd>
+
+                        <dt class="col-5 text-muted">Базовая цена</dt>
+                        <dd class="col-7 fw-semibold">{{ product.price|floatformat:2 }} руб.</dd>
+
+                        <dt class="col-5 text-muted">Поставщик</dt>
+                        <dd class="col-7">
+                            {% if product.supplier %}
+                            <a href="{% url 'suppliers:supplier_detail' product.supplier.pk %}"
+                               class="text-decoration-none">
+                                {{ product.supplier.name }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-5 text-muted">Добавлен</dt>
+                        <dd class="col-7">{{ product.created_at|date:"d.m.Y" }}</dd>
+
+                        <dt class="col-5 text-muted">Обновлён</dt>
+                        <dd class="col-7">{{ product.updated_at|date:"d.m.Y H:i" }}</dd>
+                    </dl>
+
+                    {% if product.description %}
+                    <hr class="my-3">
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-file-text me-1"></i><strong>Описание:</strong><br>
+                        {{ product.description|linebreaksbr }}
+                    </p>
+                    {% endif %}
+                </div>
+
+                {# KPI остатков #}
+                <div class="card-footer bg-white border-top">
+                    <div class="row text-center g-0">
+                        <div class="col-4 border-end py-2">
+                            <div class="h4 fw-bold {% if product.is_out_of_stock %}text-danger{% elif product.is_low_stock %}text-warning{% else %}text-success{% endif %} mb-0">
+                                {{ product.quantity }}
+                            </div>
+                            <div class="text-muted small">Остаток</div>
+                        </div>
+                        <div class="col-4 border-end py-2">
+                            <div class="h4 fw-bold text-secondary mb-0">{{ product.min_quantity }}</div>
+                            <div class="text-muted small">Минимум</div>
+                        </div>
+                        <div class="col-4 py-2">
+                            <div class="h6 fw-bold mb-0">{{ product.total_cost|floatformat:0 }}</div>
+                            <div class="text-muted small">Сумма, руб.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Быстрые операции #}
+            {% if user.is_admin or user.is_manager or user.is_warehouse_staff %}
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-body py-3">
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">
+                        <i class="bi bi-lightning me-1"></i>Быстрые операции
+                    </h6>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'inventory:stock_in' %}?product={{ product.pk }}"
+                           class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-box-arrow-in-down me-1"></i>Оприходовать
+                        </a>
+                        <a href="{% url 'inventory:stock_out' %}?product={{ product.pk }}"
+                           class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-box-arrow-up me-1"></i>Провести расход
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        {# ====== Правая колонка: история операций ====== #}
+        <div class="col-12 col-lg-8">
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-clock-history me-2 text-primary"></i>История операций
+                        <span class="badge bg-light text-dark border ms-1">последние 15</span>
+                    </h5>
+                    <a href="{% url 'inventory:movement_history' %}?product={{ product.pk }}"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-journal-text me-1"></i>Весь журнал
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_movements %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4" style="width:160px">Дата / время</th>
+                                    <th style="width:160px">Операция</th>
+                                    <th class="text-center" style="width:100px">Кол-во</th>
+                                    <th>Документ</th>
+                                    <th style="width:130px">Автор</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in recent_movements %}
+                                <tr>
+                                    <td class="ps-4 text-muted">
+                                        {{ m.created_at|date:"d.m.Y" }}<br>
+                                        <span class="opacity-75">{{ m.created_at|time:"H:i" }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ m.operation_badge_class }}">
+                                            {{ m.get_operation_type_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center fw-semibold">
+                                        <span class="{% if m.is_incoming %}text-success{% else %}text-danger{% endif %}">
+                                            {% if m.is_incoming %}+{% else %}−{% endif %}{{ m.quantity }}
+                                            <span class="text-muted fw-normal">{{ product.get_unit_display }}</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if m.document %}
+                                        {% if m.purchase_order %}
+                                        <a href="{% url 'suppliers:order_detail' m.purchase_order.pk %}"
+                                           class="text-decoration-none small">
+                                            {{ m.document }}
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">{{ m.document }}</span>
+                                        {% endif %}
+                                        {% elif m.note %}
+                                        <span class="text-muted">{{ m.note|truncatechars:40 }}</span>
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted">
+                                        {% if m.created_by %}
+                                        {{ m.created_by.get_full_name|default:m.created_by.username }}
+                                        {% else %}
+                                        <span class="opacity-50">Система</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-clock-history display-3 text-muted opacity-25"></i>
+                        <p class="text-muted mt-2 mb-0">Операций по товару пока не проводилось</p>
+                        {% if user.is_admin or user.is_manager or user.is_warehouse_staff %}
+                        <div class="mt-3 d-flex gap-2 justify-content-center">
+                            <a href="{% url 'inventory:stock_in' %}?product={{ product.pk }}"
+                               class="btn btn-success btn-sm">
+                                <i class="bi bi-box-arrow-in-down me-1"></i>Оприходовать
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{# ====== Модальное окно удаления ====== #}
+{% if user.is_admin or user.is_manager %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Удаление товара
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Удалить товар <strong>«{{ product.name }}»</strong> (SKU: {{ product.sku }})?
+                <br><small class="text-muted">Товар с историей операций удалить невозможно.</small>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                    Отмена
+                </button>
+                <form method="post" action="{% url 'inventory:product_delete' product.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash me-1"></i>Удалить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
