@@ -210,7 +210,9 @@ def order_create(request):
             )
             return redirect('suppliers:order_detail', pk=order.pk)
     else:
-        form    = PurchaseOrderForm()
+        supplier_id = request.GET.get('supplier')
+        initial = {'supplier': supplier_id} if supplier_id else {}
+        form    = PurchaseOrderForm(initial=initial)
         formset = OrderItemFormSet()
 
     context = {
